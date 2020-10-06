@@ -31,15 +31,19 @@ def process_scopes():
     # define file paths
     month_path = os.path.join(global_path,str(year),str(month).zfill(2))
 
-    Source_EDPR = [file_name for file_name in os.listdir(month_path) if "EDPR scope" in file_name][0]
-    Source_EDPR_NA = [file_name for file_name in os.listdir(month_path) if "EDPR-NA scope" in file_name][0]
-    Source_NEO3 = [file_name for file_name in os.listdir(month_path) if "NEO-3 scope" in file_name][0]
-    Source_BR = [file_name for file_name in os.listdir(month_path) if "BR scope" in file_name][0]
-    Source_OF = [file_name for file_name in os.listdir(month_path) if "OF scope" in file_name][0]
+    month_path_sp = os.path.join(month_path, 'Scopes')
+
+    Source_EDPR = [file_name for file_name in os.listdir(month_path_sp) if "EDPR scope" in file_name][0]
+    Source_EDPR_NA = [file_name for file_name in os.listdir(month_path_sp) if "EDPR-NA scope" in file_name][0]
+    Source_NEO3 = [file_name for file_name in os.listdir(month_path_sp) if "NEO-3 scope" in file_name][0]
+    Source_BR = [file_name for file_name in os.listdir(month_path_sp) if "BR scope" in file_name][0]
+    Source_OF = [file_name for file_name in os.listdir(month_path_sp) if "OF scope" in file_name][0]
 
     Destination_file = os.path.join(month_path, 'Scope '+str(month)+'M'+str(year)[2:]+'.csv')
 
-    Source_RU = [file_name for file_name in os.listdir(month_path) if file_name.startswith('RU ')][0]
+    month_path_ru = os.path.join(month_path, 'RUs')
+
+    Source_RU = [file_name for file_name in os.listdir(month_path_ru) if file_name.startswith('RU ')][0]
 
     # output paths to be used
     print ('EDPR Scope: '+ Source_EDPR)
@@ -52,22 +56,22 @@ def process_scopes():
 
     # read RU file
 
-    df_EDPR_RU = pd.read_csv(os.path.join(month_path,Source_RU), encoding = 'utf-16', sep=';', skiprows=2).drop("Unnamed: 9",axis=1)
+    df_EDPR_RU = pd.read_csv(os.path.join(month_path_ru,Source_RU), encoding = 'utf-16', sep=';', skiprows=2).drop("Unnamed: 9",axis=1)
 
     # read scopes
 
-    df_EDPR = read_Scope(os.path.join(month_path,Source_EDPR))
+    df_EDPR = read_Scope(os.path.join(month_path_sp,Source_EDPR))
 
-    df_EDPR_NA = read_Scope(os.path.join(month_path,Source_EDPR_NA))
+    df_EDPR_NA = read_Scope(os.path.join(month_path_sp,Source_EDPR_NA))
     df_EDPR_NA['EDPR-NA Scope'] = 'EDPR-NA'
 
-    df_EDPR_NEO3 = read_Scope(os.path.join(month_path,Source_NEO3))
+    df_EDPR_NEO3 = read_Scope(os.path.join(month_path_sp,Source_NEO3))
     df_EDPR_NEO3['NEO-3 Scope'] = 'NEO-3'
 
-    df_EDPR_BR = read_Scope(os.path.join(month_path,Source_BR))
+    df_EDPR_BR = read_Scope(os.path.join(month_path_sp,Source_BR))
     df_EDPR_BR['EDPR-BR Scope'] = 'EDPR-BR'
 
-    df_EDPR_OF = read_Scope(os.path.join(month_path,Source_OF))
+    df_EDPR_OF = read_Scope(os.path.join(month_path_sp,Source_OF))
     df_EDPR_OF['EDPR-OF Scope'] = 'EDPR-OF'
 
     # merge scopes to identify EDPR SPVs presence in platform scopes
