@@ -38,6 +38,7 @@ def process_scopes():
     Source_NEO3 = [file_name for file_name in os.listdir(month_path_sp) if "NEO-3 scope" in file_name][0]
     Source_BR = [file_name for file_name in os.listdir(month_path_sp) if "BR scope" in file_name][0]
     Source_OF = [file_name for file_name in os.listdir(month_path_sp) if "OF scope" in file_name][0]
+    Source_IG = [file_name for file_name in os.listdir(month_path_sp) if "IG scope" in file_name][0]
 
     Destination_file = os.path.join(month_path, 'Scope '+str(month)+'M'+str(year)[2:]+'.csv')
 
@@ -51,6 +52,7 @@ def process_scopes():
     print ('NEO-3 Scope: '+Source_NEO3)
     print ('BR Scope: '+Source_BR)
     print ('OF Scope: '+Source_OF)
+    print ('IG Scope: '+Source_IG)
     print ('RU file: '+Source_RU)
     print ('Destination file: '+Destination_file)
 
@@ -74,6 +76,9 @@ def process_scopes():
     df_EDPR_OF = read_Scope(os.path.join(month_path_sp,Source_OF))
     df_EDPR_OF['EDPR-OF Scope'] = 'EDPR-OF'
 
+    df_EDPR_IG = read_Scope(os.path.join(month_path_sp,Source_IG))
+    df_EDPR_IG['EDPR-IG Scope'] = 'EDPR-IG'
+
     # merge scopes to identify EDPR SPVs presence in platform scopes
 
     df_merged = pd.merge(df_EDPR, df_EDPR_NA, how='left', on='Reporting unit (code)', suffixes=('', '_y')).drop(['Reporting unit (description)_y', 'Revised method (Closing)_y', 'Revised Conso. (Closing)_y', 'Revised Own. Int. (Closing)_y', 'Revised Fin. Int. (Closing)_y', 'Revised method (Opening package)_y', 'Revised Conso. (Opening package)_y', 'Revised Own. Int. (Opening package)_y', 'Revised Fin. Int. (Opening package)_y', 'Scope status (Closing)_y'], axis=1)
@@ -84,17 +89,20 @@ def process_scopes():
 
     df_merged = pd.merge(df_merged, df_EDPR_OF, how='left', on='Reporting unit (code)', suffixes=('', '_y')).drop(['Reporting unit (description)_y', 'Revised method (Closing)_y', 'Revised Conso. (Closing)_y', 'Revised Own. Int. (Closing)_y', 'Revised Fin. Int. (Closing)_y', 'Revised method (Opening package)_y', 'Revised Conso. (Opening package)_y', 'Revised Own. Int. (Opening package)_y', 'Revised Fin. Int. (Opening package)_y', 'Scope status (Closing)_y'], axis=1)
 
+    df_merged = pd.merge(df_merged, df_EDPR_IG, how='left', on='Reporting unit (code)', suffixes=('', '_y')).drop(['Reporting unit (description)_y', 'Revised method (Closing)_y', 'Revised Conso. (Closing)_y', 'Revised Own. Int. (Closing)_y', 'Revised Fin. Int. (Closing)_y', 'Revised method (Opening package)_y', 'Revised Conso. (Opening package)_y', 'Revised Own. Int. (Opening package)_y', 'Revised Fin. Int. (Opening package)_y', 'Scope status (Closing)_y'], axis=1)
+
     # create a list of our conditions
     conditions = [
         (df_merged['EDPR-NA Scope'].notnull()),
         (df_merged['NEO-3 Scope'].notnull()),
         (df_merged['EDPR-BR Scope'].notnull()),
         (df_merged['EDPR-OF Scope'].notnull()),
+        (df_merged['EDPR-IG Scope'].notnull()),
         True
         ]
 
     # create a list of the values we want to assign for each condition
-    values = ['EDPR-NA', 'NEO-3', 'EDPR-BR', 'EDPR-OF', 'GR-EDP-RENOV']
+    values = ['EDPR-NA', 'NEO-3', 'EDPR-BR', 'EDPR-OF', 'EDPR-IG', 'GR-EDP-RENOV']
 
     # create a new column and use np.select to assign values to it using our lists as arguments
     df_merged['Scope'] = np.select(conditions, values)
@@ -119,6 +127,7 @@ def process_scopes():
     'NEO-3 Scope': 'str',
     'EDPR-BR Scope': 'str',
     'EDPR-OF Scope': 'str',
+    'EDPR-IG Scope': 'str',
     'Scope': 'str',
     'Scope-Check': 'str'}
     
