@@ -100,11 +100,80 @@ def process_scopes():
     df_merged['Scope'] = np.select(conditions, values)
 
     df_merged['Scope-Check'] = df_merged.isnull().sum(axis=1) >=3
+    #add extra scopes
+    path_config = os.path.join(global_path, "Scopes_Config.xlsx")
+    df_config = pd.read_excel(path_config, sheet_name="SCOPES", dtype={"SPV Reference": "str"})
+
+    dtypes_extra_cols = {
+    'Revised method (Closing)': 'str',
+    'Revised Conso. (Closing)': 'str',
+    'Revised Own. Int. (Closing)': 'str',
+    'Revised Fin. Int. (Closing)': 'str',
+    'Revised method (Opening package)': 'str',
+    'Revised Conso. (Opening package)': 'str',
+    'Revised Own. Int. (Opening package)': 'str',
+    'Revised Fin. Int. (Opening package)': 'str',
+    'Scope status (Closing)': 'str',
+    'EDPR-NA Scope': 'str',
+    'NEO-3 Scope': 'str',
+    'EDPR-BR Scope': 'str',
+    'EDPR-OF Scope': 'str',
+    'Scope': 'str',
+    'Scope-Check': 'str'}
+    
+    df_extra_cols = pd.read_excel(path_config, sheet_name="NO_SPV_REF", dtype=dtypes_extra_cols)
+
+    for _, row in df_config.iterrows():
+        
+        a = row["SPV Reference"]
+        b = row["File Prefix"]
+        print(f"Treating {b}")
+        filename = list(filter(lambda x: row["File Prefix"] in x, os.listdir(month_path_sp)))[0]
+        file_path = file_path = os.path.join(month_path_sp, filename)
+        df_scope_extra = read_Scope(file_path)
+        
+        #remove duplicates, in case D_RU are in df_merged
+        df_scope_extra = df_scope_extra[~df_scope_extra["Reporting unit (code)"].isin(df_merged["Reporting unit (code)"])]
+        df_scope_extra.reset_index(inplace=True, drop=True)
+        
+        #if companies in scope extra are null because all were included in df_merge, go to next iteration
+        if df_scope_extra.empty:
+            print("Passing to next iteration, dataframe empty.")
+            continue
+        
+        #add extra columns
+        if type(row["SPV Reference"]) != float:
+            df_merged_filtered = df_merged[df_merged["Reporting unit (code)"]==row["SPV Reference"]][df_extra_cols.columns].reset_index(drop=True)            
+            assert df_merged_filtered.shape[0] == 1, f"Please review {df_merged_filtered.shape[0]}"
+            for col in df_extra_cols.columns:
+                if col in df_scope_extra.columns:
+                    df_scope_extra.drop(col, axis=1, inplace=True)
+            
+            df_scope_extra.to_csv(f"../output/scope_extra_pre_{a}.csv", index=False)
+            df_merged_filtered.to_csv(f"../output/filtered_pre_{a}.csv", index=False)
+            df_scope_extra = pd.concat([df_scope_extra, df_merged_filtered], axis=1).fillna(method="ffill")
+            df_scope_extra.to_csv(f"../output/scope_extra_post_{a}.csv", index=False)
+            print(df_scope_extra)
+            # for col in df_extra_cols.columns:
+            #     df_scope_extra[col].fillna(method="ffill", inplace=True)
+            df_merged = pd.concat([df_merged, df_scope_extra], ignore_index=True)
+        else:
+            
+            c = df_scope_extra["Reporting unit (code)"].unique()
+            print(f"Treating {b, a}")
+            for col in df_extra_cols.columns:
+                if col in df_scope_extra.columns:
+                    df_scope_extra.drop(col, axis=1, inplace=True)
+            df_scope_extra = pd.concat([df_scope_extra, df_merged_filtered], axis=1).fillna(method="ffill")
+            print(df_scope_extra)
+            df_merged = pd.concat([df_merged, df_scope_extra], ignore_index=True)
+        df_merged.to_csv(f"../output/df_merged_{a}.csv", index=False)
+    # df_merged = pd.concat([df_merged].extend(list_df_extra_scopes))
 
     df_EDPR_RU = df_EDPR_RU.rename(columns = {'Code' : 'Reporting unit (code)', 'País (Code)': 'Country', 'Estrutura de gestão (Code)': 'Management Structure', 'Moeda (Code)': 'D_CU', 'Código SAP (Code)': 'SAP Code_PreAdj', 'Código SAP (Long description)': 'SAP description'}).drop(['Long description', 'Estrutura de gestão (Long description)', 'Date created'], axis=1)
 
     df_merged = pd.merge(df_merged, df_EDPR_RU, how='left', on='Reporting unit (code)')
-
+    
     # create a list of our conditions
     conditions2 = [
         (df_merged['Reporting unit (code)'].astype(str).str.endswith("EM")),
