@@ -101,6 +101,7 @@ def process_scopes():
 
     df_merged['Scope-Check'] = df_merged.isnull().sum(axis=1) >=3
     #add extra scopes
+    df_merged.to_csv("../output/df_merged_first.csv", index=False)
     path_config = os.path.join(global_path, "Scopes_Config.xlsx")
     df_config = pd.read_excel(path_config, sheet_name="SCOPES", dtype={"SPV Reference": "str"})
 
@@ -143,7 +144,8 @@ def process_scopes():
         
         #add extra columns
         if type(row["SPV Reference"]) != float:
-            df_merged_filtered = df_merged[df_merged["Reporting unit (code)"]==row["SPV Reference"]][df_extra_cols.columns].reset_index(drop=True)            
+            print("Row is not float")
+            df_merged_filtered = df_merged[df_merged["Reporting unit (code)"]==row["SPV Reference"]][df_extra_cols.columns].copy().reset_index(drop=True)            
             assert df_merged_filtered.shape[0] == 1, f"Please review {df_merged_filtered.shape[0]}"
             for col in df_extra_cols.columns:
                 if col in df_scope_extra.columns:
@@ -158,13 +160,16 @@ def process_scopes():
             #     df_scope_extra[col].fillna(method="ffill", inplace=True)
             df_merged = pd.concat([df_merged, df_scope_extra], ignore_index=True)
         else:
-            
+            print("Row is float")
+            print(df_scope_extra)
             c = df_scope_extra["Reporting unit (code)"].unique()
             print(f"Treating {b, a}")
+            # df_merged_filtered = df_merged[df_merged["Reporting unit (code)"]==row["SPV Reference"]][df_extra_cols.columns].copy().reset_index(drop=True)
+            df_extra_cols_2 = df_extra_cols.copy()
             for col in df_extra_cols.columns:
                 if col in df_scope_extra.columns:
                     df_scope_extra.drop(col, axis=1, inplace=True)
-            df_scope_extra = pd.concat([df_scope_extra, df_merged_filtered], axis=1).fillna(method="ffill")
+            df_scope_extra = pd.concat([df_scope_extra, df_extra_cols_2], axis=1).fillna(method="ffill")
             print(df_scope_extra)
             df_merged = pd.concat([df_merged, df_scope_extra], ignore_index=True)
         df_merged.to_csv(f"../output/df_merged_{a}.csv", index=False)
