@@ -93,16 +93,16 @@ def process_scopes():
 
     # create a list of our conditions
     conditions = [
+        (df_merged['EDPR-IG Scope'].notnull()),
         (df_merged['EDPR-NA Scope'].notnull()),
         (df_merged['NEO-3 Scope'].notnull()),
         (df_merged['EDPR-BR Scope'].notnull()),
         (df_merged['EDPR-OF Scope'].notnull()),
-        (df_merged['EDPR-IG Scope'].notnull()),
         True
         ]
 
     # create a list of the values we want to assign for each condition
-    values = ['EDPR-NA', 'NEO-3', 'EDPR-BR', 'EDPR-OF', 'EDPR-IG', 'GR-EDP-RENOV']
+    values = ['EDPR-IG', 'EDPR-NA', 'NEO-3', 'EDPR-BR', 'EDPR-OF', 'GR-EDP-RENOV']
 
     # create a new column and use np.select to assign values to it using our lists as arguments
     df_merged['Scope'] = np.select(conditions, values)
