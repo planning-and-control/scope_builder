@@ -133,5 +133,5 @@ input/
 output/
 
 #variables
-variables.py
+#variables.py
 connect.py
